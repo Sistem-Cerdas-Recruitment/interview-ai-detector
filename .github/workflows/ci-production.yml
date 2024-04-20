@@ -1,0 +1,61 @@
+name: Deploy to Google Vertex AI
+
+on:
+  push:
+    branches:
+      - production
+
+jobs:
+  setup-build-publish-deploy:
+    name: Setup, Build, Publish, and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0.2.0
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_DEPLOYER_SA_KEY }}
+          export_default_credentials: true
+
+      - name: Authenticate Docker
+        run: |
+          gcloud auth configure-docker ${{ secrets.GCP_REPO_REGION }}-docker.pkg.dev --quiet
+
+      - name: Build image
+        working-directory: ./
+        run: docker build . --file Dockerfile --tag ${{ secrets.GCP_REPO_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/interview-ai-detector/model-prediction
+
+      - name: Push image
+        run: docker push ${{ secrets.GCP_REPO_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/interview-ai-detector/model-prediction
+
+      - name: Create model
+        id: create_model
+        run: |
+          MODEL_ID=$(gcloud ai models upload \
+            --region=${{ secrets.GCP_VERTEX_AI_REGION }} \
+            --display-name="interview-ai-detector-model" \
+            --container-image-uri="${{ secrets.GCP_REPO_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/interview-ai-detector/model-prediction:latest" \
+            --format="value(model)")
+          echo "MODEL_ID=${MODEL_ID}" >> $GITHUB_ENV
+
+      - name: Create Vertex AI endpoint
+        id: create_endpoint
+        run: |
+          ENDPOINT_ID=$(gcloud ai endpoints create \
+            --region=${{ secrets.GCP_VERTEX_AI_REGION }} \
+            --display-name="interview-ai-detector-endpoint" \
+            --format="value(name)")
+          echo "ENDPOINT_ID=${ENDPOINT_ID}" >> $GITHUB_ENV
+
+      - name: Deploy model to endpoint
+        run: |
+          gcloud ai endpoints deploy-model ${{ env.ENDPOINT_ID }} \
+            --region ${{ secrets.GCP_VERTEX_AI_REGION }} \
+            --model ${{ env.MODEL_ID }} \
+            --display-name interview-ai-detector-deployment \
+            --machine-type n1-standard-4 \
+            --accelerator count=1,type=nvidia-tesla-t4

@@ -5,8 +5,8 @@ from typing import List
 
 class RandomForestModel:
     def __init__(self):
-        self.scaler = joblib.load("rf_scaler.joblib")
-        self.model = joblib.load("random_forest.joblib")
+        self.scaler = joblib.load("scalers/rf_scaler.joblib")
+        self.model = joblib.load("models/random_forest.joblib")
 
     def preprocess_input(self, secondary_model_features: List[float]) -> np.ndarray:
         return self.scaler.transform(np.array(secondary_model_features).astype(np.float32).reshape(1, -1))

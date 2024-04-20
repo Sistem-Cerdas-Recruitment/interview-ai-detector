@@ -23,9 +23,9 @@ class BaseModelHypothesis:
         self.features_not_normalized = []
 
         self.scaler_normalized_text_length = joblib.load(
-            "scaler-normalized-text-length.joblib")
+            "scalers/scaler-normalized-text-length.joblib")
         self.scaler_not_normalized = joblib.load(
-            "scaler-not-normalized.joblib")
+            "scalers/scaler-not-normalized.joblib")
 
     def process_emotion_lexicon(self):
         emotion_lexicon = {}
