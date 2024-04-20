@@ -50,7 +50,7 @@ class PredictMainModel:
         self.model = AlbertCustomClassificationHead(
             self.albert_model).to(self.device)
         # TODO : CHANGE MODEL STATE DICT PATH
-        self.model.load_state_dict(torch.load("best_model_fold_4.pth"))
+        self.model.load_state_dict(torch.load("models/albert_model.pth"))
 
     def preprocess_input(self, text: str, additional_features: np.ndarray):
         encoding = self.tokenizer.encode_plus(
