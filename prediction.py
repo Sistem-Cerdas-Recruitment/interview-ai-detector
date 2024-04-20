@@ -7,6 +7,7 @@ from main_model import PredictMainModel
 import torch.nn as nn
 import torch
 import numpy as np
+from typing import List
 
 app = FastAPI()
 
@@ -19,15 +20,22 @@ class PredictRequest(BaseModel):
     letter_click_counts: dict[str, int]
 
 
-@app.post("/predict")
-async def predict(request: PredictRequest):
-    request_dict = request.model_dump()
+class RequestModel(BaseModel):
+    instances: List[PredictRequest]
 
-    question = request_dict.get("question")
-    answer = request_dict.get("answer")
-    backspace_count = request_dict.get("backspace_count")
-    typing_duration = request_dict.get("typing_duration")
-    letter_click_counts = request_dict.get("letter_click_counts")
+
+@app.post("/predict")
+async def predict(request: RequestModel):
+    responses = [process_instance(data) for data in request.instances]
+    return {"predictions": responses}
+
+
+def process_instance(data: PredictRequest):
+    question = data.question
+    answer = data.answer
+    backspace_count = data.backspace_count
+    typing_duration = data.typing_duration
+    letter_click_counts = data.letter_click_counts
 
     hypothesis = BaseModelHypothesis()
     features_normalized_text_length = hypothesis.calculate_normalized_text_length_features(
@@ -51,7 +59,9 @@ async def predict(request: PredictRequest):
         secondary_model_features)
 
     return {
-        "main_model_probability": main_model_probability,
-        "final_prediction": secondary_model_prediction,
-        "prediction_class": "AI" if secondary_model_prediction == 1 else "HUMAN"
+        "prediction_class": "AI" if secondary_model_prediction == 1 else "HUMAN",
+        "details": {
+            "main_model_probability": main_model_probability,
+            "final_prediction": secondary_model_prediction
+        }
     }
