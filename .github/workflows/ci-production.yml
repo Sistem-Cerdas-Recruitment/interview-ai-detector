@@ -36,8 +36,11 @@ jobs:
         id: create_model
         run: |
           MODEL_ID=$(gcloud ai models upload \
+            --container-ports=8080
+            --container-predict-route="/predict" \
+            --container-health-route="/health" \
             --region=${{ secrets.GCP_VERTEX_AI_REGION }} \
-            --display-name="interview-ai-detector-model" \
+            --display-name=interview-ai-detector-model \
             --container-image-uri="${{ secrets.GCP_REPO_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/interview-ai-detector/model-prediction:latest" \
             --format="value(model)")
           echo "MODEL_ID=${MODEL_ID}" >> $GITHUB_ENV
@@ -47,15 +50,15 @@ jobs:
         run: |
           ENDPOINT_ID=$(gcloud ai endpoints create \
             --region=${{ secrets.GCP_VERTEX_AI_REGION }} \
-            --display-name="interview-ai-detector-endpoint" \
+            --display-name=interview-ai-detector-endpoint \
             --format="value(name)")
           echo "ENDPOINT_ID=${ENDPOINT_ID}" >> $GITHUB_ENV
 
       - name: Deploy model to endpoint
         run: |
           gcloud ai endpoints deploy-model ${{ env.ENDPOINT_ID }} \
-            --region ${{ secrets.GCP_VERTEX_AI_REGION }} \
-            --model ${{ env.MODEL_ID }} \
-            --display-name interview-ai-detector-deployment \
-            --machine-type n1-standard-4 \
-            --accelerator count=1,type=nvidia-tesla-t4
+            --region=${{ secrets.GCP_VERTEX_AI_REGION }} \
+            --model=${{ env.MODEL_ID }} \
+            --display-name=interview-ai-detector-deployment \
+            --machine-type="n1-standard-4" \
+            --accelerator=count=1,type=nvidia-tesla-t4

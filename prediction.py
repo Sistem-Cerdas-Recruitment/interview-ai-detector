@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Response, status
 from pydantic import BaseModel
 from hypothesis import BaseModelHypothesis
 from random_forest_dependencies import RandomForestDependencies
@@ -22,6 +22,11 @@ class PredictRequest(BaseModel):
 
 class RequestModel(BaseModel):
     instances: List[PredictRequest]
+
+
+@app.get("/health")
+async def is_alive():
+    return Response(status_code=status.HTTP_200_OK)
 
 
 @app.post("/predict")
