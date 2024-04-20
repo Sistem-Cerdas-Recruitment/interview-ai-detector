@@ -36,12 +36,12 @@ jobs:
         id: create_model
         run: |
           MODEL_ID=$(gcloud ai models upload \
-            --container-ports=8080
+            --region="${{ secrets.GCP_VERTEX_AI_REGION }}" \
+            --container-ports=8080 \
+            --container-image-uri="${{ secrets.GCP_REPO_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/interview-ai-detector/model-prediction:latest" \
             --container-predict-route="/predict" \
             --container-health-route="/health" \
-            --region=${{ secrets.GCP_VERTEX_AI_REGION }} \
             --display-name=interview-ai-detector-model \
-            --container-image-uri="${{ secrets.GCP_REPO_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/interview-ai-detector/model-prediction:latest" \
             --format="value(model)")
           echo "MODEL_ID=${MODEL_ID}" >> $GITHUB_ENV
 
