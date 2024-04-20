@@ -4,8 +4,6 @@ from hypothesis import BaseModelHypothesis
 from random_forest_dependencies import RandomForestDependencies
 from random_forest_model import RandomForestModel
 from main_model import PredictMainModel
-import torch.nn as nn
-import torch
 import numpy as np
 from typing import List
 
