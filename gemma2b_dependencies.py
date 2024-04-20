@@ -3,19 +3,25 @@ import torch
 from torch.nn.functional import cosine_similarity
 from collections import Counter
 import numpy as np
+from device_manager import DeviceManager
 
 
 class Gemma2BDependencies:
-    def __init__(self, question: str, answer: str):
-        self.question = question
-        self.answer = answer
-        self.tokenizer = AutoTokenizer.from_pretrained("google/gemma-2b")
-        self.model = AutoModelForCausalLM.from_pretrained("google/gemma-2b")
-        self.device = torch.device("cuda")
-        self.model.to(self.device)
+    _instance = None
 
-    def calculate_perplexity(self):
-        inputs = self.tokenizer(self.answer, return_tensors="pt",
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(Gemma2BDependencies, cls).__new__(cls)
+            cls._instance.tokenizer = AutoTokenizer.from_pretrained(
+                "google/gemma-2b")
+            cls._instance.model = AutoModelForCausalLM.from_pretrained(
+                "google/gemma-2b")
+            cls._instance.device = DeviceManager()
+            cls._instance.model.to(cls._instance.device)
+        return cls._instance
+
+    def calculate_perplexity(self, text: str):
+        inputs = self.tokenizer(text, return_tensors="pt",
                                 truncation=True, max_length=1024)
         inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
@@ -27,9 +33,9 @@ class Gemma2BDependencies:
 
         return perplexity.item()
 
-    def calculate_burstiness(self):
+    def calculate_burstiness(self, text: str):
         # Tokenize the text using GPT-2 tokenizer
-        tokens = self.tokenizer.tokenize(self.answer)
+        tokens = self.tokenizer.tokenize(text)
 
         # Count token frequencies
         frequency_counts = list(Counter(tokens).values())
@@ -42,8 +48,8 @@ class Gemma2BDependencies:
         vmr = variance / mean if mean > 0 else 0
         return vmr
 
-    def get_embedding(self):
-        inputs = self.tokenizer(self.text, return_tensors="pt",
+    def get_embedding(self, text: str):
+        inputs = self.tokenizer(text, return_tensors="pt",
                                 truncation=True, max_length=1024)
         inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
@@ -55,8 +61,8 @@ class Gemma2BDependencies:
         embedding = torch.mean(last_hidden_states, dim=1)
         return embedding
 
-    def calculate_cosine_similarity(self):
-        embedding1 = self.get_embedding(self.question)
-        embedding2 = self.get_embedding(self.answer)
+    def calculate_cosine_similarity(self, question: str, answer: str):
+        embedding1 = self.get_embedding(question)
+        embedding2 = self.get_embedding(answer)
         # Ensure the embeddings are in the correct shape for cosine_similarity
         return cosine_similarity(embedding1, embedding2).item()

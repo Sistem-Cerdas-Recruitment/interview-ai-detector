@@ -1,37 +1,12 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from hypothesis import BaseModelHypothesis
-from randomforest import RandomForestDependencies
+from random_forest_dependencies import RandomForestDependencies
+from random_forest_model import RandomForestModel
+from main_model import PredictMainModel
 import torch.nn as nn
 import torch
-
-
-class AlbertCustomClassificationHead(nn.Module):
-    def __init__(self, albert_model, dropout_rate=0.1):
-        super(AlbertCustomClassificationHead, self).__init__()
-        self.albert_model = albert_model
-        self.dropout = nn.Dropout(dropout_rate)
-        self.classifier = nn.Linear(1024 + 25, 1)
-
-    def forward(self, input_ids, attention_mask, additional_features, labels=None):
-        albert_output = self.albert_model(
-            input_ids=input_ids, attention_mask=attention_mask).pooler_output
-
-        combined_features = torch.cat(
-            [albert_output, additional_features], dim=1)
-
-        dropout_output = self.dropout(combined_features)
-
-        logits = self.classifier(dropout_output)
-
-        if labels is not None:
-            loss_fn = nn.BCEWithLogitsLoss()
-            labels = labels.unsqueeze(1)
-            loss = loss_fn(logits, labels.float())
-            return logits, loss
-        else:
-            return logits
-
+import numpy as np
 
 app = FastAPI()
 
@@ -60,4 +35,23 @@ async def predict(request: PredictRequest):
     features_not_normalized = hypothesis.calculate_not_normalized_features(
         answer)
 
-    return request_dict.get("backspace_count")
+    combined_additional_features = np.concatenate(
+        (features_normalized_text_length, features_not_normalized), axis=1)
+
+    main_model = PredictMainModel()
+    main_model_probability = main_model.predict(
+        answer, combined_additional_features)
+
+    random_forest_features = RandomForestDependencies()
+    secondary_model_features = random_forest_features.calculate_features(
+        question, answer, main_model_probability, backspace_count, typing_duration, letter_click_counts)
+
+    secondary_model = RandomForestModel()
+    secondary_model_prediction = secondary_model.predict(
+        secondary_model_features)
+
+    return {
+        "main_model_probability": main_model_probability,
+        "final_prediction": secondary_model_prediction,
+        "prediction_class": "AI" if secondary_model_prediction == 1 else "HUMAN"
+    }

@@ -5,23 +5,19 @@ import pandas as pd
 import numpy as np
 from collections import defaultdict, Counter
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
-from gemma2b import Gemma2BDependencies
+from gemma2b_dependencies import Gemma2BDependencies
 
 
 class BaseModelHypothesis:
-    def __init__(self, question: str, answer: str):
+    def __init__(self):
         nltk.download('punkt')
         nltk.download('averaged_perceptron_tagger')
-
-        self.question = question
-        self.answer = answer
 
         self.analyzer = SentimentIntensityAnalyzer()
         self.lexicon_df = pd.read_csv(
             "https://storage.googleapis.com/ta-ai-detector/datasets/NRC-Emotion-Lexicon.csv")
         self.emotion_lexicon = self.process_emotion_lexicon()
-        self.gemma2bdependencies = Gemma2BDependencies(
-            self.question, self.answer)
+        self.gemma2bdependencies = Gemma2BDependencies()
 
         self.features_normalized_text_length = []
         self.features_not_normalized = []
@@ -39,30 +35,30 @@ class BaseModelHypothesis:
             emotion_lexicon[row["word"]].append(row["emotion"])
         return emotion_lexicon
 
-    def calculate_normalized_text_length_features(self):
+    def calculate_normalized_text_length_features(self, text: str) -> np.ndarray:
         self.features_normalized_text_length = self.extract_pos_features(
-            self.answer)
+            text)
         self.features_normalized_text_length = self.features_normalized_text_length + \
-            self.calculate_emotion_proportions(self.answer)
+            self.calculate_emotion_proportions(text)
         self.features_normalized_text_length.append(
-            self.measure_unique_word_ratio(self.answer))
+            self.measure_unique_word_ratio(text))
 
         return self.scaler_normalized_text_length.transform(np.array(self.features_normalized_text_length).astype(np.float32).reshape(1, -1))
 
-    def calculate_not_normalized_features(self):
+    def calculate_not_normalized_features(self, text: str) -> np.ndarray:
         self.features_not_normalized.append(
-            self.measure_sentiment_intensity(self.answer))
+            self.measure_sentiment_intensity(text))
         self.features_not_normalized = self.features_not_normalized + \
-            self.measure_readability(self.answer)
+            self.measure_readability(text)
         self.features_not_normalized.append(
-            self.gemma2bdependencies.calculate_perplexity(self.answer))
+            self.gemma2bdependencies.calculate_perplexity(text))
         self.features_not_normalized.append(
-            self.gemma2bdependencies.calculate_burstiness(self.answer))
+            self.gemma2bdependencies.calculate_burstiness(text))
 
         return self.scaler_not_normalized.transform(np.array(self.features_not_normalized).astype(np.float32).reshape(1, -1))
 
-    def extract_pos_features(self):
-        words = nltk.word_tokenize(self.answer)
+    def extract_pos_features(self, text: str):
+        words = nltk.word_tokenize(text)
         pos_tags = nltk.pos_tag(words)
         desired_tags = ["JJ", "VB", "RB", "PRP", "DT", "IN", "NN", "NNS"]
         pos_counts = defaultdict(int, {tag: 0 for tag in desired_tags})
@@ -76,19 +72,19 @@ class BaseModelHypothesis:
 
         return pos_ratios
 
-    def measure_sentiment_intensity(self):
-        sentiment = self.analyzer.polarity_scores(self.answer)
+    def measure_sentiment_intensity(self, text: str):
+        sentiment = self.analyzer.polarity_scores(text)
         return sentiment["compound"]
 
-    def measure_readability(self):
-        gunning_fog = textstat.gunning_fog(self.answer)
-        smog_index = textstat.smog_index(self.answer)
-        dale_chall_score = textstat.dale_chall_readability_score(self.answer)
+    def measure_readability(self, text: str):
+        gunning_fog = textstat.gunning_fog(text)
+        smog_index = textstat.smog_index(text)
+        dale_chall_score = textstat.dale_chall_readability_score(text)
 
         return [gunning_fog, smog_index, dale_chall_score]
 
-    def calculate_emotion_proportions(self):
-        tokens = nltk.word_tokenize(self.answer)
+    def calculate_emotion_proportions(self, text: str):
+        tokens = nltk.word_tokenize(text)
 
         total_tokens = len(tokens)
 
@@ -108,8 +104,8 @@ class BaseModelHypothesis:
             proportions["sadness"], proportions["disgust"], proportions["anticipation"], proportions["joy"], proportions["surprise"]
         ]
 
-    def measure_unique_word_ratio(self):
-        tokens = nltk.word_tokenize(self.answer)
+    def measure_unique_word_ratio(self, text: str):
+        tokens = nltk.word_tokenize(text)
         total_words = len(tokens)
 
         unique_words = len(Counter(tokens).keys())
