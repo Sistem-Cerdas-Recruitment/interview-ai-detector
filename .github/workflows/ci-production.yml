@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - production
+    path:
+      - "core-model-prediction/**"
+      - ".github/workflows/**"
 
 jobs:
   setup-build-publish-deploy:
@@ -26,7 +29,7 @@ jobs:
           gcloud auth configure-docker ${{ secrets.GCP_REPO_REGION }}-docker.pkg.dev --quiet
 
       - name: Build image
-        working-directory: ./
+        working-directory: ./core-model-prediction
         run: docker build . --file Dockerfile --tag ${{ secrets.GCP_REPO_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/interview-ai-detector/model-prediction
 
       - name: Push image
@@ -61,4 +64,5 @@ jobs:
             --model=${{ env.MODEL_ID }} \
             --display-name=interview-ai-detector-deployment \
             --machine-type="n1-standard-4" \
-            --accelerator=count=1,type=nvidia-tesla-t4
+            --accelerator=count=1,type=nvidia-tesla-t4 \
+            --verbosity="debug"
