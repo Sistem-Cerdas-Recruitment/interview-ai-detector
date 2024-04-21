@@ -6,8 +6,8 @@ steps:
       - "-c"
       - |
         gcloud builds submit \
-          --region="${_GCP_REPO_REGION}"
-          --tag=${_GCP_REPO_REGION}-docker.pkg.dev/${PROJECT_ID}/interview-ai-detector/model-prediction
+          --region="us-central1"
+          --tag=us-central1-docker.pkg.dev/${PROJECT_ID}/interview-ai-detector/model-prediction
 
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: "bash"
@@ -15,7 +15,7 @@ steps:
       - "-c"
       - |
         _MODEL_ID=$(gcloud ai models upload \
-          --region="${_GCP_VERTEX_AI_REGION}" \
+          --region="us-central1" \
           --container-ports=8080 \
           --container-image-uri="gcr.io/${PROJECT_ID}/interview-ai-detector/model-prediction:latest" \
           --container-predict-route="/predict" \
@@ -30,7 +30,7 @@ steps:
       - "-c"
       - |
         _ENDPOINT_ID=$(gcloud ai endpoints create \
-          --region="${_GCP_VERTEX_AI_REGION}" \
+          --region="us-central1" \
           --display-name="interview-ai-detector-endpoint" \
           --format="value(name)")
         echo "_ENDPOINT_ID=${_ENDPOINT_ID}"
@@ -41,9 +41,9 @@ steps:
       - "-c"
       - |
         gcloud ai endpoints deploy-model "${_ENDPOINT_ID}" \
-          --region="${_GCP_VERTEX_AI_REGION}" \
+          --region="us-central1" \
           --model="${_MODEL_ID}" \
           --display-name="interview-ai-detector-deployment" \
           --machine-type="n1-standard-4" \
           --accelerator="count=1,type=nvidia-tesla-t4" \
-          --service-account="${_GCP_VERTEX_AI_SA_EMAIL}"
+          --service-account="vertex-ai-user-managed-sa@steady-climate-416810.iam.gserviceaccount.com"
