@@ -64,7 +64,7 @@ def process_instance(data: PredictRequest):
     return {
         "prediction_class": "AI" if secondary_model_prediction == 1 else "HUMAN",
         "details": {
-            "main_model_probability": main_model_probability,
+            "main_model_probability": str(main_model_probability),
             "final_prediction": secondary_model_prediction
         }
     }

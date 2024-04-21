@@ -6,6 +6,7 @@ steps:
     automapSubstitutions: true
 
   - name: "gcr.io/cloud-builders/docker"
+    id: "push-image"
     script: |
       docker push us-central1-docker.pkg.dev/${PROJECT_ID}/interview-ai-detector/model-prediction:latest
     automapSubstitutions: true
@@ -38,6 +39,8 @@ steps:
 
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: "bash"
+    waitFor:
+      - "push-image"
     args:
       - "-c"
       - |
