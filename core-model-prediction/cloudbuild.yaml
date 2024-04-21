@@ -14,7 +14,7 @@ steps:
     args:
       - "-c"
       - |
-        _MODEL_ID=$(gcloud ai models upload \
+        MODEL_ID=$(gcloud ai models upload \
           --region="us-central1" \
           --container-ports=8080 \
           --container-image-uri="gcr.io/${PROJECT_ID}/interview-ai-detector/model-prediction:latest" \
@@ -22,27 +22,27 @@ steps:
           --container-health-route="/health" \
           --display-name="interview-ai-detector-model" \
           --format="value(model)")
-        echo "_MODEL_ID=${_MODEL_ID}"
+        echo "MODEL_ID=${MODEL_ID}"
 
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: "bash"
     args:
       - "-c"
       - |
-        _ENDPOINT_ID=$(gcloud ai endpoints create \
+        ENDPOINT_ID=$(gcloud ai endpoints create \
           --region="us-central1" \
           --display-name="interview-ai-detector-endpoint" \
           --format="value(name)")
-        echo "_ENDPOINT_ID=${_ENDPOINT_ID}"
+        echo "ENDPOINT_ID=${ENDPOINT_ID}"
 
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: "bash"
     args:
       - "-c"
       - |
-        gcloud ai endpoints deploy-model "${_ENDPOINT_ID}" \
+        gcloud ai endpoints deploy-model "${ENDPOINT_ID}" \
           --region="us-central1" \
-          --model="${_MODEL_ID}" \
+          --model="${MODEL_ID}" \
           --display-name="interview-ai-detector-deployment" \
           --machine-type="n1-standard-4" \
           --accelerator="count=1,type=nvidia-tesla-t4" \
