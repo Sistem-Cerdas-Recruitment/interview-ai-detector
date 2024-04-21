@@ -3,6 +3,7 @@ steps:
     dir: "core-model-prediction"
     script: |
       docker build -t us-central1-docker.pkg.dev/${PROJECT_ID}/interview-ai-detector/model-prediction:latest .
+    automapSubstitutions: true
 
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: "bash"
