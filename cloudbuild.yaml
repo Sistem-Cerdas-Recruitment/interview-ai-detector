@@ -1,13 +1,14 @@
 steps:
-  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
-    dir: "core-model-prediction"
-    entrypoint: "bash"
+  - name: "gcr.io/cloud-builders/docker"
     args:
-      - "-c"
-      - |
-        gcloud builds submit \
-          --region="us-central1"
-          --tag=us-central1-docker.pkg.dev/${PROJECT_ID}/interview-ai-detector/model-prediction
+      [
+        "build",
+        "-t",
+        "us-central1-docker.pkg.dev/${PROJECT_ID}/interview-ai-detector/model-prediction",
+        "./core-model-prediction",
+      ]
+    images:
+      - "us-central1-docker.pkg.dev/${PROJECT_ID}/interview-ai-detector/model-prediction"
 
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: "bash"
