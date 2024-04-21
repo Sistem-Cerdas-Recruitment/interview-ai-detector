@@ -4,7 +4,7 @@ steps:
       [
         "build",
         "-t",
-        "us-central1-docker.pkg.dev/${PROJECT_ID}/interview-ai-detector/model-prediction",
+        "us-central1-docker.pkg.dev/${PROJECT_ID}/interview-ai-detector/model-prediction:latest",
         "./core-model-prediction",
       ]
 
@@ -48,4 +48,4 @@ steps:
           --service-account="vertex-ai-user-managed-sa@steady-climate-416810.iam.gserviceaccount.com"
 
 images:
-  - "us-central1-docker.pkg.dev/${PROJECT_ID}/interview-ai-detector/model-prediction"
+  - "us-central1-docker.pkg.dev/${PROJECT_ID}/interview-ai-detector/model-prediction:latest"
