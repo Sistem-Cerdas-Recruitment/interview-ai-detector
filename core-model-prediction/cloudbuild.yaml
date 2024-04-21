@@ -1,13 +1,13 @@
 steps:
-  - name: "docker"
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     dir: "core-model-prediction"
+    entrypoint: "bash"
     args:
-      [
-        "builds",
-        "submit",
-        "--tag",
-        "gcr.io/${PROJECT_ID}/interview-ai-detector/model-prediction",
-      ]
+      - "-c"
+      - |
+        gcloud builds submit \
+          --region="${_GCP_REPO_REGION}"
+          --tag=${_GCP_REPO_REGION}-docker.pkg.dev/${PROJECT_ID}/interview-ai-detector/model-prediction
 
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: "bash"
