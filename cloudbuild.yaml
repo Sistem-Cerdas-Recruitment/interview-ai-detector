@@ -4,7 +4,7 @@ steps:
       [
         "build",
         "-t",
-        "us-central1-docker.pkg.dev/${PROJECT_ID}/interview-ai-detector/model-prediction:latest",
+        "us-central1-docker.pkg.dev/${PROJECT_ID}/interview-ai-detector/model-prediction",
         "./core-model-prediction",
       ]
 
@@ -16,7 +16,7 @@ steps:
         MODEL_ID=$(gcloud ai models upload \
           --region="us-central1" \
           --container-ports=8080 \
-          --container-image-uri="gcr.io/${PROJECT_ID}/interview-ai-detector/model-prediction:latest" \
+          --container-image-uri="us-central1-docker.pkg.dev/${PROJECT_ID}/interview-ai-detector/model-prediction:latest" \
           --container-predict-route="/predict" \
           --container-health-route="/health" \
           --display-name="interview-ai-detector-model" \
