@@ -6,7 +6,7 @@ steps:
         "builds",
         "submit",
         "--tag",
-        "gcr.io/$PROJECT_ID/interview-ai-detector/model-prediction",
+        "gcr.io/${PROJECT_ID}/interview-ai-detector/model-prediction",
       ]
 
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
@@ -15,9 +15,9 @@ steps:
       - "-c"
       - |
         _MODEL_ID=$(gcloud ai models upload \
-          --region="$_GCP_VERTEX_AI_REGION" \
+          --region="${_GCP_VERTEX_AI_REGION}" \
           --container-ports=8080 \
-          --container-image-uri="gcr.io/$PROJECT_ID/interview-ai-detector/model-prediction:latest" \
+          --container-image-uri="gcr.io/${PROJECT_ID}/interview-ai-detector/model-prediction:latest" \
           --container-predict-route="/predict" \
           --container-health-route="/health" \
           --display-name="interview-ai-detector-model" \
@@ -30,7 +30,7 @@ steps:
       - "-c"
       - |
         _ENDPOINT_ID=$(gcloud ai endpoints create \
-          --region="$_GCP_VERTEX_AI_REGION" \
+          --region="${_GCP_VERTEX_AI_REGION}" \
           --display-name="interview-ai-detector-endpoint" \
           --format="value(name)")
         echo "_ENDPOINT_ID=${_ENDPOINT_ID}"
@@ -40,10 +40,10 @@ steps:
     args:
       - "-c"
       - |
-        gcloud ai endpoints deploy-model "$_ENDPOINT_ID" \
-          --region="$_GCP_VERTEX_AI_REGION" \
-          --model="$_MODEL_ID" \
+        gcloud ai endpoints deploy-model "${_ENDPOINT_ID}" \
+          --region="${_GCP_VERTEX_AI_REGION}" \
+          --model="${_MODEL_ID}" \
           --display-name="interview-ai-detector-deployment" \
           --machine-type="n1-standard-4" \
           --accelerator="count=1,type=nvidia-tesla-t4" \
-          --service-account="$_GCP_VERTEX_AI_SA_EMAIL"
+          --service-account="${_GCP_VERTEX_AI_SA_EMAIL}"
