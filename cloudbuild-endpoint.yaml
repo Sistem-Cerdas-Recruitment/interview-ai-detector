@@ -1,16 +1,4 @@
 steps:
-  - name: "gcr.io/cloud-builders/docker"
-    dir: "core-model-prediction"
-    script: |
-      docker build -t us-central1-docker.pkg.dev/${PROJECT_ID}/interview-ai-detector/model-prediction:latest .
-    automapSubstitutions: true
-
-  - name: "gcr.io/cloud-builders/docker"
-    id: "push-image"
-    script: |
-      docker push us-central1-docker.pkg.dev/${PROJECT_ID}/interview-ai-detector/model-prediction:latest
-    automapSubstitutions: true
-
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: "bash"
     args:
@@ -51,6 +39,3 @@ steps:
           --machine-type="n1-standard-4" \
           --accelerator="count=1,type=nvidia-tesla-t4" \
           --service-account="vertex-ai-user-managed-sa@steady-climate-416810.iam.gserviceaccount.com"
-
-images:
-  - "us-central1-docker.pkg.dev/${PROJECT_ID}/interview-ai-detector/model-prediction:latest"

@@ -1,0 +1,20 @@
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    dir: "core-model-prediction"
+    args:
+      [
+        "build",
+        "-t",
+        "us-central1-docker.pkg.dev/${PROJECT_ID}/interview-ai-detector/model-prediction:latest",
+        ".",
+      ]
+
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "push",
+        "us-central1-docker.pkg.dev/${PROJECT_ID}/interview-ai-detector/model-prediction:latest",
+      ]
+
+images:
+  - "us-central1-docker.pkg.dev/${PROJECT_ID}/interview-ai-detector/model-prediction:latest"
