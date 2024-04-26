@@ -1,6 +1,8 @@
 steps:
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: "bash"
+    id: upload-model
+    timeout: 600
     args:
       - "-c"
       - |
@@ -16,6 +18,8 @@ steps:
 
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: "bash"
+    id: create-endpoint
+    waitFor: upload-model
     args:
       - "-c"
       - |
@@ -27,12 +31,13 @@ steps:
 
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: "bash"
+    waitFor: create-endpoint
     args:
       - "-c"
       - |
-        gcloud ai endpoints deploy-model "${cat /workspace/endpoint_id.txt}" \
+        gcloud ai endpoints deploy-model "${$(cat /workspace/endpoint_id.txt)}" \
           --region="us-central1" \
-          --model="${cat /workspace/model_id.txt}" \
+          --model="${$(cat /workspace/model_id.txt)}" \
           --display-name="interview-ai-detector-deployment" \
           --machine-type="n1-standard-4" \
           --accelerator="count=1,type=nvidia-tesla-t4" \
