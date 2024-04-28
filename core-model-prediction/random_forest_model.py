@@ -12,4 +12,4 @@ class RandomForestModel:
         return self.scaler.transform(np.array(secondary_model_features).astype(np.float32).reshape(1, -1))
 
     def predict(self, secondary_model_features: List[float]):
-        return self.model.predict(self.preprocess_input(secondary_model_features))[0]
+        return int(self.model.predict(self.preprocess_input(secondary_model_features))[0])

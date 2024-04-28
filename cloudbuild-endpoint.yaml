@@ -1,0 +1,53 @@
+steps:
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: "bash"
+    id: upload-model
+    timeout: 600s
+    args:
+      - "-c"
+      - |
+        gcloud ai models upload \
+          --region="us-central1" \
+          --container-ports=8080 \
+          --container-image-uri="us-central1-docker.pkg.dev/${PROJECT_ID}/interview-ai-detector/model-prediction:latest" \
+          --container-predict-route="/predict" \
+          --container-health-route="/health" \
+          --display-name="interview-ai-detector-model"
+
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: "bash"
+    id: fetch-model
+    waitFor: upload-model
+    timeout: 600s
+    args:
+      - "-c"
+      - |
+        MODEL_ID=$(gcloud ai models list --region=us-central1 --format="value(name)" | head -n 1)
+        echo MODEL_ID > /workspace/model_id.txt
+
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: "bash"
+    id: create-endpoint
+    waitFor: fetch-model
+    args:
+      - "-c"
+      - |
+        ENDPOINT_ID=$(gcloud ai endpoints create \
+          --region="us-central1" \
+          --display-name="interview-ai-detector-endpoint" \
+          --format="value(name)")
+        echo ENDPOINT_ID > /workspace/endpoint_id.txt
+
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: "bash"
+    waitFor: create-endpoint
+    args:
+      - "-c"
+      - |
+        gcloud ai endpoints deploy-model "${$(cat /workspace/endpoint_id.txt)}" \
+          --region="us-central1" \
+          --model="${$(cat /workspace/model_id.txt)}" \
+          --display-name="interview-ai-detector-deployment" \
+          --machine-type="n1-standard-4" \
+          --accelerator="count=1,type=nvidia-tesla-t4" \
+          --service-account="vertex-ai-user-managed-sa@steady-climate-416810.iam.gserviceaccount.com"

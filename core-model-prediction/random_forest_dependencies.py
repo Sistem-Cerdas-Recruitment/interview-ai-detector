@@ -5,7 +5,6 @@ from collections import Counter
 class RandomForestDependencies:
     def __init__(self):
         self.gemma2bdependencies = Gemma2BDependencies()
-        self.random_forest_features = []
 
     def calculate_features(self, question: str, answer: str, probability: float, backspace_count: int, typing_duration: int, letter_click_counts: dict[str, int]):
         cosine_similarity = self.gemma2bdependencies.calculate_cosine_similarity(
@@ -15,7 +14,7 @@ class RandomForestDependencies:
         letter_discrepancy = self.calculate_letter_discrepancy(
             answer, letter_click_counts)
 
-        self.random_forest_features = [
+        return [
             cosine_similarity, probability, backspace_count_normalized,
             typing_duration_normalized, letter_discrepancy
         ]
