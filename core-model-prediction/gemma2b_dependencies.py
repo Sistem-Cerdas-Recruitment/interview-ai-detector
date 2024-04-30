@@ -43,7 +43,7 @@ class Gemma2BDependencies:
 
     def calculate_burstiness(self, text: str):
         # Tokenize the text using GPT-2 tokenizer
-        tokens = self.tokenizer.tokenize(text)
+        tokens = self.tokenizer.encode(text, add_special_tokens=False)
 
         # Count token frequencies
         frequency_counts = list(Counter(tokens).values())
@@ -55,22 +55,3 @@ class Gemma2BDependencies:
         # Compute Variance-to-Mean Ratio (VMR) for burstiness
         vmr = variance / mean if mean > 0 else 0
         return vmr
-
-    def get_embedding(self, text: str):
-        inputs = self.tokenizer(text, return_tensors="pt",
-                                truncation=True, max_length=1024)
-        inputs = {k: v.to(self.device) for k, v in inputs.items()}
-
-        with torch.no_grad():
-            outputs = self.model(**inputs, output_hidden_states=True)
-
-        last_hidden_states = outputs.hidden_states[-1]
-        # Average the token embeddings to get a sentence-level embedding
-        embedding = torch.mean(last_hidden_states, dim=1)
-        return embedding
-
-    def calculate_cosine_similarity(self, question: str, answer: str):
-        embedding1 = self.get_embedding(question)
-        embedding2 = self.get_embedding(answer)
-        # Ensure the embeddings are in the correct shape for cosine_similarity
-        return cosine_similarity(embedding1, embedding2).item()

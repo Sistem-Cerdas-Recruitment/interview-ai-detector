@@ -3,24 +3,47 @@ import joblib
 import textstat
 import pandas as pd
 import numpy as np
-from collections import defaultdict, Counter
+from typing import List
+from collections import defaultdict
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from gemma2b_dependencies import Gemma2BDependencies
+from string import punctuation
 
 
 class BaseModelHypothesis:
     def __init__(self):
         nltk.download('punkt')
+        nltk.download('wordnet')
         nltk.download('averaged_perceptron_tagger')
 
         self.analyzer = SentimentIntensityAnalyzer()
         self.lexicon_df = pd.read_csv(
-            "https://storage.googleapis.com/ta-ai-detector/datasets/NRC-Emotion-Lexicon.csv")
+            "https://storage.googleapis.com/interview-ai-detector/higher-accuracy-final-model/NRC-Emotion-Lexicon.csv")
         self.emotion_lexicon = self.process_emotion_lexicon()
+        self.lemmatizer = nltk.stem.WordNetLemmatizer()
         self.gemma2bdependencies = Gemma2BDependencies()
 
-        self.features_normalized_text_length = []
-        self.features_not_normalized = []
+        self.additional_feature_columns = [
+            "nn_ratio", "nns_ratio", "jj_ratio", "in_ratio", "dt_ratio", "vb_ratio", "prp_ratio", "rb_ratio",
+            "compound_score", "gunning_fog", "smog_index", "dale_chall_score",
+            "negative_emotion_proportions", "positive_emotion_proportions", "fear_emotion_proportions",
+            "anger_emotion_proportions", "trust_emotion_proportions", "sadness_emotion_proportions",
+            "disgust_emotion_proportions", "anticipation_emotion_proportions", "joy_emotion_proportions",
+            "surprise_emotion_proportions", "unique_words_ratio", "perplexity", "burstiness"
+        ]
+
+        self.features_normalized_text_length = [
+            "nn_ratio", "nns_ratio", "jj_ratio", "in_ratio", "dt_ratio", "vb_ratio", "prp_ratio", "rb_ratio",
+            "negative_emotion_proportions", "positive_emotion_proportions", "fear_emotion_proportions",
+            "anger_emotion_proportions", "trust_emotion_proportions", "sadness_emotion_proportions",
+            "disgust_emotion_proportions", "anticipation_emotion_proportions", "joy_emotion_proportions",
+            "surprise_emotion_proportions", "unique_words_ratio"
+        ]
+
+        self.features_not_normalized = [
+            "compound_score", "gunning_fog", "smog_index", "dale_chall_score",
+            "perplexity", "burstiness"
+        ]
 
         self.scaler_normalized_text_length = joblib.load(
             "scalers/scaler-normalized-text-length.joblib")
@@ -35,32 +58,43 @@ class BaseModelHypothesis:
             emotion_lexicon[row["word"]].append(row["emotion"])
         return emotion_lexicon
 
-    def calculate_normalized_text_length_features(self, text: str) -> np.ndarray:
-        self.features_normalized_text_length = self.extract_pos_features(
+    def calculate_features_dataframe(self, text: str) -> np.ndarray:
+        normalized_text_length_features = self.calculate_normalized_text_length_features(
             text)
-        self.features_normalized_text_length = self.features_normalized_text_length + \
-            self.calculate_emotion_proportions(text)
-        self.features_normalized_text_length.append(
-            self.measure_unique_word_ratio(text))
+        not_normalized_features = self.calculate_not_normalized_features(text)
+        all_features = normalized_text_length_features + not_normalized_features
+        features_df = pd.DataFrame(
+            [all_features], columns=self.additional_feature_columns)
 
-        return self.scaler_normalized_text_length.transform(np.array(self.features_normalized_text_length).astype(np.float32).reshape(1, -1))
+        # Scaling features
+        features_df[self.features_normalized_text_length] = self.scaler_normalized_text_length.transform(
+            features_df[self.features_normalized_text_length])
+        features_df[self.features_not_normalized] = self.scaler_not_normalized.transform(
+            features_df[self.features_not_normalized])
 
-    def calculate_not_normalized_features(self, text: str) -> np.ndarray:
-        self.features_not_normalized.append(
-            self.measure_sentiment_intensity(text))
-        self.features_not_normalized = self.features_not_normalized + \
-            self.measure_readability(text)
-        self.features_not_normalized.append(
-            self.gemma2bdependencies.calculate_perplexity(text))
-        self.features_not_normalized.append(
-            self.gemma2bdependencies.calculate_burstiness(text))
+        ordered_df = features_df[self.additional_feature_columns]
 
-        return self.scaler_not_normalized.transform(np.array(self.features_not_normalized).astype(np.float32).reshape(1, -1))
+        return ordered_df.values.astype(np.float32).reshape(1, -1)
+
+    def calculate_normalized_text_length_features(self, text: str) -> List[float]:
+        pos_features = self.extract_pos_features(text)
+        emotion_features = self.calculate_emotion_proportions(text)
+        unique_word_ratio = [self.measure_unique_word_ratio(text)]
+        features = pos_features + emotion_features + unique_word_ratio
+        return features
+
+    def calculate_not_normalized_features(self, text: str) -> List[float]:
+        sentiment_intensity = self.measure_sentiment_intensity(text)
+        readability_scores = self.measure_readability(text)
+        perplexity = [self.gemma2bdependencies.calculate_perplexity(text)]
+        burstiness = [self.gemma2bdependencies.calculate_burstiness(text)]
+        features = sentiment_intensity + readability_scores + perplexity + burstiness
+        return features
 
     def extract_pos_features(self, text: str):
         words = nltk.word_tokenize(text)
         pos_tags = nltk.pos_tag(words)
-        desired_tags = ["JJ", "VB", "RB", "PRP", "DT", "IN", "NN", "NNS"]
+        desired_tags = ["NN", "NNS", "JJ", "IN", "DT", "VB", "PRP", "RB"]
         pos_counts = defaultdict(int, {tag: 0 for tag in desired_tags})
 
         for _, pos in pos_tags:
@@ -83,20 +117,37 @@ class BaseModelHypothesis:
 
         return [gunning_fog, smog_index, dale_chall_score]
 
+    def __penn2morphy(self, penntag):
+        morphy_tag = {
+            'NN': 'n', 'NNS': 'n', 'NNP': 'n', 'NNPS': 'n',  # Nouns
+            'JJ': 'a', 'JJR': 'a', 'JJS': 'a',  # Adjectives
+            'VB': 'v', 'VBD': 'v', 'VBG': 'v', 'VBN': 'v', 'VBP': 'v', 'VBZ': 'v',  # Verbs
+            'RB': 'r', 'RBR': 'r', 'RBS': 'r',  # Adverbs
+            # Pronouns, determiners, prepositions, modal verbs
+            'PRP': 'n', 'PRP$': 'n', 'DT': 'n', 'IN': 'n', 'MD': 'v',
+            # Others, treated as nouns unless a better fit is found
+            'CC': 'n', 'CD': 'n', 'EX': 'n', 'FW': 'n', 'POS': 'n', 'TO': 'n', 'WDT': 'n', 'WP': 'n', 'WP$': 'n', 'WRB': 'n', 'PDT': 'n'
+        }
+        return morphy_tag.get(penntag[:2], 'n')
+
     def calculate_emotion_proportions(self, text: str):
         tokens = nltk.word_tokenize(text)
+        tagged_tokens = nltk.pos_tag(tokens)
 
-        total_tokens = len(tokens)
+        lemmas = [self.lemmatizer.lemmatize(
+            token.lower(), pos=self.__penn2morphy(tag)) for token, tag in tagged_tokens]
+
+        total_lemmas = len(lemmas)
 
         emotion_counts = {emotion: 0 for emotion in [
             "negative", "positive", "fear", "anger", "trust", "sadness", "disgust", "anticipation", "joy", "surprise"]}
 
-        for token in tokens:
-            if token in self.emotion_lexicon:
-                for emotion in self.emotion_lexicon[token]:
+        for lemma in lemmas:
+            if lemma in self.emotion_lexicon:
+                for emotion in self.emotion_lexicon[lemma]:
                     emotion_counts[emotion] += 1
 
-        proportions = {emotion: count / total_tokens for emotion,
+        proportions = {emotion: count / total_lemmas for emotion,
                        count in emotion_counts.items()}
 
         return [
@@ -105,9 +156,12 @@ class BaseModelHypothesis:
         ]
 
     def measure_unique_word_ratio(self, text: str):
-        tokens = nltk.word_tokenize(text)
+        tokens = nltk.word_tokenize(text.lower())
+
+        tokens = [token for token in tokens if token not in punctuation]
+
         total_words = len(tokens)
 
-        unique_words = len(Counter(tokens).keys())
+        unique_words = len(set(tokens))
 
         return (unique_words / total_words)

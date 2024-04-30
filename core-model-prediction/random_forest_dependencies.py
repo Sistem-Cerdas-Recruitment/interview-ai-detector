@@ -3,19 +3,14 @@ from collections import Counter
 
 
 class RandomForestDependencies:
-    def __init__(self):
-        self.gemma2bdependencies = Gemma2BDependencies()
-
-    def calculate_features(self, question: str, answer: str, probability: float, backspace_count: int, typing_duration: int, letter_click_counts: dict[str, int]):
-        cosine_similarity = self.gemma2bdependencies.calculate_cosine_similarity(
-            question, answer)
+    def calculate_features(self, answer: str, probability: float, backspace_count: int, typing_duration: int, letter_click_counts: dict[str, int]):
         backspace_count_normalized = backspace_count / len(answer)
         typing_duration_normalized = typing_duration / len(answer)
         letter_discrepancy = self.calculate_letter_discrepancy(
             answer, letter_click_counts)
 
         return [
-            cosine_similarity, probability, backspace_count_normalized,
+            probability, backspace_count_normalized,
             typing_duration_normalized, letter_discrepancy
         ]
 

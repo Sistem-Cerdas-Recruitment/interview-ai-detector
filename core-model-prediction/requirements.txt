@@ -2,8 +2,8 @@ nltk
 vaderSentiment
 pandas
 textstat
-scikit-learn==1.4.1.post1
-transformers
+scikit-learn==1.2.2
+transformers==4.38.2
 fastapi
 uvicorn
 google-cloud-secret-manager

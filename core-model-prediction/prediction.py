@@ -40,29 +40,27 @@ def process_instance(data: PredictRequest):
     typing_duration = data.typing_duration
     letter_click_counts = data.letter_click_counts
 
+    # Data preparation for 1st model
     hypothesis = BaseModelHypothesis()
-    features_normalized_text_length = hypothesis.calculate_normalized_text_length_features(
-        answer)
-    features_not_normalized = hypothesis.calculate_not_normalized_features(
-        answer)
+    additional_features = hypothesis.calculate_features_dataframe(answer)
 
-    combined_additional_features = np.concatenate(
-        (features_normalized_text_length, features_not_normalized), axis=1)
-
+    # 1st model prediction
     main_model = PredictMainModel()
     main_model_probability = main_model.predict(
-        answer, combined_additional_features)
+        answer, additional_features)
 
+    # Data preparation for 2nd model
     random_forest_features = RandomForestDependencies()
     secondary_model_features = random_forest_features.calculate_features(
-        question, answer, main_model_probability, backspace_count, typing_duration, letter_click_counts)
+        answer, main_model_probability, backspace_count, typing_duration, letter_click_counts)
 
+    # 2nd model prediction
     secondary_model = RandomForestModel()
     secondary_model_prediction = secondary_model.predict(
         secondary_model_features)
 
     return {
-        "prediction_class": "AI" if secondary_model_prediction == 1 else "HUMAN",
+        "predicted_class": "AI" if secondary_model_prediction == 1 else "HUMAN",
         "details": {
             "main_model_probability": str(main_model_probability),
             "final_prediction": secondary_model_prediction
