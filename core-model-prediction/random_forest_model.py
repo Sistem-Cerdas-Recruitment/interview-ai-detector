@@ -15,7 +15,8 @@ class RandomForestModel:
     def preprocess_input(self, secondary_model_features: List[float]) -> np.ndarray:
         features_df = pd.DataFrame([secondary_model_features], columns=[
                                    self.secondary_model_features])
-        features_df = self.scaler.transform(features_df)
+        features_df[self.secondary_model_features] = self.scaler.transform(
+            features_df[self.secondary_model_features])
         return features_df.values.astype(np.float32).reshape(1, -1)
 
     def predict(self, secondary_model_features: List[float]):
