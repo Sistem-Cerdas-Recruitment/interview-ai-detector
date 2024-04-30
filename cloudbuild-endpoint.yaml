@@ -2,7 +2,6 @@ steps:
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: "bash"
     id: upload-model
-    timeout: 600s
     args:
       - "-c"
       - |
@@ -16,27 +15,15 @@ steps:
 
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: "bash"
-    id: fetch-model
-    waitFor: ["upload-model"]
-    timeout: 600s
-    args:
-      - "-c"
-      - |
-        MODEL_ID=$(gcloud ai models list --region=us-central1 --format="value(name)" | head -n 1)
-        echo MODEL_ID > /workspace/model_id.txt
-
-  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
-    entrypoint: "bash"
     id: create-endpoint
-    waitFor: ["fetch-model"]
+    waitFor: ["upload-model"]
     args:
       - "-c"
       - |
-        ENDPOINT_ID=$(gcloud ai endpoints create \
+        gcloud ai endpoints create \
           --region="us-central1" \
           --display-name="interview-ai-detector-endpoint" \
-          --format="value(name)")
-        echo ENDPOINT_ID > /workspace/endpoint_id.txt
+          --format="value(name)"
 
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: "bash"
@@ -44,9 +31,11 @@ steps:
     args:
       - "-c"
       - |
-        gcloud ai endpoints deploy-model "${$(cat /workspace/endpoint_id.txt)}" \
+        _MODEL_ID=$(gcloud ai models list --region=us-central1 --format="value(name)" | head -n 1)
+        _ENDPOINT_ID=$(gcloud ai endpoints list --region=us-central1 --format="value(name)" | head -n 1)
+        gcloud ai endpoints deploy-model "${_ENDPOINT_ID}" \
           --region="us-central1" \
-          --model="${$(cat /workspace/model_id.txt)}" \
+          --model="${_MODEL_ID}" \
           --display-name="interview-ai-detector-deployment" \
           --machine-type="n1-standard-4" \
           --accelerator="count=1,type=nvidia-tesla-t4" \
