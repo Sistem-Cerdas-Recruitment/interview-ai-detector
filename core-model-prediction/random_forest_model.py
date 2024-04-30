@@ -1,5 +1,6 @@
 import joblib
 import numpy as np
+import pandas as pd
 from typing import List
 
 
@@ -7,9 +8,15 @@ class RandomForestModel:
     def __init__(self):
         self.scaler = joblib.load("scalers/rf_scaler.joblib")
         self.model = joblib.load("models/random_forest.joblib")
+        self.secondary_model_features = [
+            "machine_probability", "backspace_count_normalized", "typing_duration_normalized", "letter_discrepancy_normalized"
+        ]
 
     def preprocess_input(self, secondary_model_features: List[float]) -> np.ndarray:
-        return self.scaler.transform(np.array(secondary_model_features).astype(np.float32).reshape(1, -1))
+        features_df = pd.DataFrame([secondary_model_features], columns=[
+                                   self.secondary_model_features])
+        features_df = self.scaler.transform(features_df)
+        return features_df.values.astype(np.float32).reshape(1, -1)
 
     def predict(self, secondary_model_features: List[float]):
         return int(self.model.predict(self.preprocess_input(secondary_model_features))[0])
