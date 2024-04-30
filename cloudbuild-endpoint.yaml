@@ -17,7 +17,7 @@ steps:
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: "bash"
     id: fetch-model
-    waitFor: upload-model
+    waitFor: ["upload-model"]
     timeout: 600s
     args:
       - "-c"
@@ -28,7 +28,7 @@ steps:
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: "bash"
     id: create-endpoint
-    waitFor: fetch-model
+    waitFor: ["fetch-model"]
     args:
       - "-c"
       - |
@@ -40,7 +40,7 @@ steps:
 
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: "bash"
-    waitFor: create-endpoint
+    waitFor: ["create-endpoint"]
     args:
       - "-c"
       - |
