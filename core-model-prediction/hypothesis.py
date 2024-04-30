@@ -85,7 +85,7 @@ class BaseModelHypothesis:
 
     def calculate_not_normalized_features(self, text: str) -> List[float]:
         sentiment_intensity = self.measure_sentiment_intensity(text)
-        readability_scores = self.measure_readability(text)
+        readability_scores = [self.measure_readability(text)]
         perplexity = [self.gemma2bdependencies.calculate_perplexity(text)]
         burstiness = [self.gemma2bdependencies.calculate_burstiness(text)]
         features = sentiment_intensity + readability_scores + perplexity + burstiness

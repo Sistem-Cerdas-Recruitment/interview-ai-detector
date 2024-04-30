@@ -31,11 +31,11 @@ steps:
     args:
       - "-c"
       - |
-        _MODEL_ID=$(gcloud ai models list --region=us-central1 --format="value(name)" | head -n 1)
-        _ENDPOINT_ID=$(gcloud ai endpoints list --region=us-central1 --format="value(name)" | head -n 1)
-        gcloud ai endpoints deploy-model "${_ENDPOINT_ID}" \
+        _MODEL_ID=$(gcloud ai models list --region=us-central1 --format="value(name)" | head -n 1) \
+        _ENDPOINT_ID=$(gcloud ai endpoints list --region=us-central1 --format="value(name)" | head -n 1) \
+        gcloud ai endpoints deploy-model $_ENDPOINT_ID \
           --region="us-central1" \
-          --model="${_MODEL_ID}" \
+          --model=$_MODEL_ID \
           --display-name="interview-ai-detector-deployment" \
           --machine-type="n1-standard-4" \
           --accelerator="count=1,type=nvidia-tesla-t4" \
