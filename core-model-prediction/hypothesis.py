@@ -14,6 +14,7 @@ import zipfile
 
 class BaseModelHypothesis:
     def __init__(self):
+        self.download_and_extract_nltk_data()
         self.analyzer = SentimentIntensityAnalyzer()
         self.lexicon_df = pd.read_csv(
             "https://storage.googleapis.com/interview-ai-detector/higher-accuracy-final-model/NRC-Emotion-Lexicon.csv")
