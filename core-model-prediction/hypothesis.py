@@ -62,7 +62,15 @@ class BaseModelHypothesis:
         not_normalized_features = self.calculate_not_normalized_features(text)
         all_features = normalized_text_length_features + not_normalized_features
         features_df = pd.DataFrame(
-            [all_features], columns=self.additional_feature_columns)
+            [all_features], columns=[
+                "nn_ratio", "nns_ratio", "jj_ratio", "in_ratio", "dt_ratio", "vb_ratio", "prp_ratio", "rb_ratio",
+                "negative_emotion_proportions", "positive_emotion_proportions", "fear_emotion_proportions",
+                "anger_emotion_proportions", "trust_emotion_proportions", "sadness_emotion_proportions",
+                "disgust_emotion_proportions", "anticipation_emotion_proportions", "joy_emotion_proportions",
+                "surprise_emotion_proportions", "unique_words_ratio",
+                "compound_score", "gunning_fog", "smog_index", "dale_chall_score",
+                "perplexity", "burstiness"
+            ])
 
         # Scaling features
         features_df[self.features_normalized_text_length] = self.scaler_normalized_text_length.transform(
