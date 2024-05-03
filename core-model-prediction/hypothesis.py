@@ -8,14 +8,12 @@ from collections import defaultdict
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from gemma2b_dependencies import Gemma2BDependencies
 from string import punctuation
+import os
+import zipfile
 
 
 class BaseModelHypothesis:
     def __init__(self):
-        nltk.download('punkt')
-        nltk.download('wordnet')
-        nltk.download('averaged_perceptron_tagger')
-
         self.analyzer = SentimentIntensityAnalyzer()
         self.lexicon_df = pd.read_csv(
             "https://storage.googleapis.com/interview-ai-detector/higher-accuracy-final-model/NRC-Emotion-Lexicon.csv")
@@ -49,6 +47,18 @@ class BaseModelHypothesis:
             "scalers/scaler-normalized-text-length.joblib")
         self.scaler_not_normalized = joblib.load(
             "scalers/scaler-not-normalized.joblib")
+
+    def download_and_extract_nltk_data(self):
+        nltk.download('punkt')
+        nltk.download('wordnet')
+        nltk.download('averaged_perceptron_tagger')
+
+        wordnet_dir = nltk.data.find("corpora/wordnet").path
+        if not os.path.exists(wordnet_dir):
+            zip_path = os.path.join(
+                os.path.dirname(wordnet_dir), "wordnet.zip")
+            with zipfile.ZipFile(zip_path, "r") as zip_ref:
+                zip_ref.extractall(os.path.dirname(wordnet_dir))
 
     def process_emotion_lexicon(self):
         emotion_lexicon = {}
