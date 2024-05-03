@@ -8,14 +8,12 @@ from collections import defaultdict
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from gemma2b_dependencies import Gemma2BDependencies
 from string import punctuation
+import os
+import zipfile
 
 
 class BaseModelHypothesis:
     def __init__(self):
-        nltk.download('punkt')
-        nltk.download('wordnet')
-        nltk.download('averaged_perceptron_tagger')
-
         self.analyzer = SentimentIntensityAnalyzer()
         self.lexicon_df = pd.read_csv(
             "https://storage.googleapis.com/interview-ai-detector/higher-accuracy-final-model/NRC-Emotion-Lexicon.csv")
@@ -64,7 +62,15 @@ class BaseModelHypothesis:
         not_normalized_features = self.calculate_not_normalized_features(text)
         all_features = normalized_text_length_features + not_normalized_features
         features_df = pd.DataFrame(
-            [all_features], columns=self.additional_feature_columns)
+            [all_features], columns=[
+                "nn_ratio", "nns_ratio", "jj_ratio", "in_ratio", "dt_ratio", "vb_ratio", "prp_ratio", "rb_ratio",
+                "negative_emotion_proportions", "positive_emotion_proportions", "fear_emotion_proportions",
+                "anger_emotion_proportions", "trust_emotion_proportions", "sadness_emotion_proportions",
+                "disgust_emotion_proportions", "anticipation_emotion_proportions", "joy_emotion_proportions",
+                "surprise_emotion_proportions", "unique_words_ratio",
+                "compound_score", "gunning_fog", "smog_index", "dale_chall_score",
+                "perplexity", "burstiness"
+            ])
 
         # Scaling features
         features_df[self.features_normalized_text_length] = self.scaler_normalized_text_length.transform(
@@ -84,7 +90,7 @@ class BaseModelHypothesis:
         return features
 
     def calculate_not_normalized_features(self, text: str) -> List[float]:
-        sentiment_intensity = self.measure_sentiment_intensity(text)
+        sentiment_intensity = [self.measure_sentiment_intensity(text)]
         readability_scores = self.measure_readability(text)
         perplexity = [self.gemma2bdependencies.calculate_perplexity(text)]
         burstiness = [self.gemma2bdependencies.calculate_burstiness(text)]
