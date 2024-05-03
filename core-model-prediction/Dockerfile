@@ -1,5 +1,5 @@
 # Use an official Python runtime as a base image
-FROM pytorch/pytorch:2.2.2-cuda12.1-cudnn8-devel
+FROM pytorch/pytorch:2.1.2-cuda12.1-cudnn8-runtime
 
 # Set the working directory in the container
 WORKDIR /app

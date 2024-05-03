@@ -1,7 +1,7 @@
-nltk
-vaderSentiment
+nltk==3.2.4
+vaderSentiment==3.3.2
 pandas
-textstat
+textstat==0.7.3
 scikit-learn==1.2.2
 transformers==4.38.2
 fastapi
