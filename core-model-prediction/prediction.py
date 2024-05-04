@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Response, status
 from pydantic import BaseModel
 from hypothesis import BaseModelHypothesis
-from random_forest_dependencies import RandomForestDependencies
+from secondary_model_dependencies import SecondaryModelDependencies
 from random_forest_model import RandomForestModel
 from main_model import PredictMainModel
 import numpy as np
@@ -50,9 +50,9 @@ def process_instance(data: PredictRequest):
         answer, additional_features)
 
     # Data preparation for 2nd model
-    random_forest_features = RandomForestDependencies()
-    secondary_model_features = random_forest_features.calculate_features(
-        answer, main_model_probability, backspace_count, typing_duration, letter_click_counts)
+    secondary_model_dependencies = SecondaryModelDependencies()
+    secondary_model_features = secondary_model_dependencies.calculate_features(
+        question, answer, main_model_probability, backspace_count, typing_duration, letter_click_counts)
 
     # 2nd model prediction
     secondary_model = RandomForestModel()
@@ -61,8 +61,5 @@ def process_instance(data: PredictRequest):
 
     return {
         "predicted_class": "AI" if secondary_model_prediction == 1 else "HUMAN",
-        "details": {
-            "main_model_probability": str(main_model_probability),
-            "final_prediction": secondary_model_prediction
-        }
+        "main_model_probability": str(main_model_probability)
     }
