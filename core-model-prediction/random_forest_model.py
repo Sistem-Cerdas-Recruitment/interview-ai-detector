@@ -13,12 +13,12 @@ class RandomForestModel:
             "letter_discrepancy_normalized", "cosine_sim_gpt35", "cosine_sim_gpt4"
         ]
 
-    def preprocess_input(self, secondary_model_features: List[float]) -> np.ndarray:
+    def preprocess_input(self, secondary_model_features: List[float]) -> pd.DataFrame:
         features_df = pd.DataFrame(
             [secondary_model_features], columns=self.secondary_model_features)
         features_df[self.secondary_model_features] = self.scaler.transform(
             features_df[self.secondary_model_features])
-        return features_df.values.astype(np.float32).reshape(1, -1)
+        return features_df
 
     def predict(self, secondary_model_features: List[float]):
         return int(self.model.predict(self.preprocess_input(secondary_model_features))[0])
