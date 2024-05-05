@@ -31,13 +31,19 @@ def consume_messages():
         auto_offset_reset='earliest',
         client_id="ai-detector-1",
         group_id=None,
-        value_deserializer=lambda x: json.loads(x.decode('utf-8'))
     )
+
+    print("Successfully connected to Kafka at", os.environ.get("KAFKA_IP"))
 
     BATCH_SIZE = 5
 
     for message in consumer:
-        full_batch = message.value
+        try:
+            full_batch = json.loads(message.value.decode("utf-8"))
+        except json.JSONDecodeError:
+            print("Failed to decode JSON from message:", message.value)
+            print("Continuing...")
+            continue
 
         for i in range(0, len(full_batch), BATCH_SIZE):
             batch = full_batch[i:i+BATCH_SIZE]
