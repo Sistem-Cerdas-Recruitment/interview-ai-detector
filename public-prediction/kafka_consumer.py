@@ -14,7 +14,7 @@ def get_gpt_responses(data: dict[str, any], gpt_helper: GetGPTAnswer):
     return data
 
 
-def process_batch(batch: List[dict[str, any]], batch_size: int):
+def process_batch(batch: List[dict[str, any]], batch_size: int, job_application_id: int):
     with ThreadPoolExecutor(max_workers=batch_size) as executor:
         gpt_helper = GetGPTAnswer()
         futures = [executor.submit(
@@ -39,7 +39,8 @@ def consume_messages():
 
     for message in consumer:
         try:
-            full_batch = json.loads(message.value.decode("utf-8"))
+            incoming_message = json.loads(message.value.decode("utf-8"))
+            full_batch = incoming_message["data"]
         except json.JSONDecodeError:
             print("Failed to decode JSON from message:", message.value)
             print("Continuing...")
@@ -47,4 +48,5 @@ def consume_messages():
 
         for i in range(0, len(full_batch), BATCH_SIZE):
             batch = full_batch[i:i+BATCH_SIZE]
-            process_batch(batch, BATCH_SIZE)
+            process_batch(batch, BATCH_SIZE,
+                          incoming_message["job_application_id"])
