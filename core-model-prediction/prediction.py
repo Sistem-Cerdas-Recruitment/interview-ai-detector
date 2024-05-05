@@ -16,6 +16,8 @@ class PredictRequest(BaseModel):
     backspace_count: int
     typing_duration: int
     letter_click_counts: dict[str, int]
+    gpt35_answer: str
+    gpt4_answer: str
 
 
 class RequestModel(BaseModel):
@@ -39,6 +41,8 @@ def process_instance(data: PredictRequest):
     backspace_count = data.backspace_count
     typing_duration = data.typing_duration
     letter_click_counts = data.letter_click_counts
+    gpt35_answer = data.gpt35_answer
+    gpt4_answer = data.gpt4_answer
 
     # Data preparation for 1st model
     hypothesis = BaseModelHypothesis()
@@ -52,7 +56,8 @@ def process_instance(data: PredictRequest):
     # Data preparation for 2nd model
     secondary_model_dependencies = SecondaryModelDependencies()
     secondary_model_features = secondary_model_dependencies.calculate_features(
-        question, answer, main_model_probability, backspace_count, typing_duration, letter_click_counts)
+        question, answer, main_model_probability, backspace_count, typing_duration,
+        letter_click_counts, gpt35_answer, gpt4_answer)
 
     # 2nd model prediction
     secondary_model = RandomForestModel()
@@ -61,5 +66,16 @@ def process_instance(data: PredictRequest):
 
     return {
         "predicted_class": "AI" if secondary_model_prediction == 1 else "HUMAN",
-        "main_model_probability": str(main_model_probability)
+        "main_model_probability": str(main_model_probability),
+        "secondary_model_prediction": secondary_model_prediction,
+        "confidence": get_confidence(main_model_probability, secondary_model_prediction)
     }
+
+
+def get_confidence(main_model_output: float, secondary_model_output: int):
+    if (main_model_output >= 0.8 and secondary_model_output == 1) or (main_model_output <= 0.2 and secondary_model_output == 0):
+        return 'High Confidence'
+    elif (0.5 < main_model_output < 0.8 and secondary_model_output == 1) or (0.2 < main_model_output <= 0.5 and secondary_model_output == 0):
+        return 'Partially Confident'
+    else:
+        return 'Low Confidence'
