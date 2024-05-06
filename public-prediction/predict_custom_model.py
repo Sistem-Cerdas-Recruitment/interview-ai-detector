@@ -2,6 +2,7 @@ from typing import Dict, List, Union
 from google.cloud import aiplatform
 from google.protobuf import json_format
 from google.protobuf.struct_pb2 import Value
+from google.oauth2 import service_account
 
 
 def predict_custom_trained_model(
@@ -17,9 +18,13 @@ def predict_custom_trained_model(
     """
     # The AI Platform services require regional API endpoints.
     client_options = {"api_endpoint": api_endpoint}
+
+    credentials = service_account.Credentials.from_service_account_file(
+        "steady-climate-416810-ea1536e1868c.json")
     # Initialize client that will be used to create and send requests.
     # This client only needs to be created once, and can be reused for multiple requests.
     client = aiplatform.gapic.PredictionServiceClient(
+        credentials=credentials
         client_options=client_options)
     # The format of each instance should conform to the deployed model's prediction input schema.
     instances = instances if isinstance(instances, list) else [instances]
