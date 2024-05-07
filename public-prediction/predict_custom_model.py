@@ -24,7 +24,7 @@ def predict_custom_trained_model(
     # Initialize client that will be used to create and send requests.
     # This client only needs to be created once, and can be reused for multiple requests.
     client = aiplatform.gapic.PredictionServiceClient(
-        credentials=credentials
+        credentials=credentials,
         client_options=client_options)
     # The format of each instance should conform to the deployed model's prediction input schema.
     instances = instances if isinstance(instances, list) else [instances]
