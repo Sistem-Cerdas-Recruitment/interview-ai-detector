@@ -21,8 +21,6 @@ def process_batch(batch: List[dict[str, any]], batch_size: int, gpt_helper: GetG
             get_gpt_responses, data, gpt_helper) for data in batch]
         results = [future.result() for future in futures]
 
-    print("Batch ready with gpt responses", results)
-
     predictions = predict_custom_trained_model(
         instances=results, project=os.environ.get("PROJECT_ID"), endpoint_id=os.environ.get("ENDPOINT_ID"))
 
@@ -41,6 +39,7 @@ def process_batch(batch: List[dict[str, any]], batch_size: int, gpt_helper: GetG
 
 
 def send_results_back(full_results: dict[str, any], job_application_id: str):
+    print(f"Sending results back with job_app_id {job_application_id}")
     url = "https://ta-2-sistem-cerdas-be-vi2jkj4riq-et.a.run.app/api/anti-cheat/update"
     headers = {
         "Content-Type": "application/json",
@@ -78,6 +77,8 @@ def consume_messages():
             print("Failed to decode JSON from message:", message.value)
             print("Continuing...")
             continue
+
+        print(f"Parsing successful. Processing job_app_id {incoming_message['job_application_id']}")
 
         full_results = []
         for i in range(0, len(full_batch), BATCH_SIZE):
