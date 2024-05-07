@@ -1,5 +1,6 @@
 import json
 import os
+import requests
 from kafka import KafkaConsumer
 from get_gpt_answer import GetGPTAnswer
 from typing import List
@@ -14,9 +15,8 @@ def get_gpt_responses(data: dict[str, any], gpt_helper: GetGPTAnswer):
     return data
 
 
-def process_batch(batch: List[dict[str, any]], batch_size: int, job_application_id: int):
+def process_batch(batch: List[dict[str, any]], batch_size: int, gpt_helper: GetGPTAnswer):
     with ThreadPoolExecutor(max_workers=batch_size) as executor:
-        gpt_helper = GetGPTAnswer()
         futures = [executor.submit(
             get_gpt_responses, data, gpt_helper) for data in batch]
         results = [future.result() for future in futures]
@@ -37,7 +37,23 @@ def process_batch(batch: List[dict[str, any]], batch_size: int, job_application_
                 print(f"Item {key} is not a convertible protobuf message.")
         results.append(result_dict)
 
-    print({"result": results})
+    return results
+
+
+def send_results_back(full_results: dict[str, any], job_application_id: str):
+    url = "https://ta-2-sistem-cerdas-be-vi2jkj4riq-et.a.run.app/api/anti-cheat/update"
+    headers = {
+        "Content-Type": "application/json",
+        "x-api-key": os.environ.get("X-API-KEY")
+    }
+
+    body = {
+        "job_application_id": job_application_id,
+        "evaluation": full_results
+    }
+
+    response = requests.patch(url, json=body, headers=headers)
+    print(f"Data sent with status code {response.status_code}")
 
 
 def consume_messages():
@@ -46,12 +62,13 @@ def consume_messages():
         bootstrap_servers=[os.environ.get("KAFKA_IP")],
         auto_offset_reset='earliest',
         client_id="ai-detector-1",
-        group_id=None,
+        group_id="ai-detector",
     )
 
     print("Successfully connected to Kafka at", os.environ.get("KAFKA_IP"))
 
     BATCH_SIZE = 5
+    gpt_helper = GetGPTAnswer()
 
     for message in consumer:
         try:
@@ -62,7 +79,10 @@ def consume_messages():
             print("Continuing...")
             continue
 
+        full_results = []
         for i in range(0, len(full_batch), BATCH_SIZE):
             batch = full_batch[i:i+BATCH_SIZE]
-            process_batch(batch, BATCH_SIZE,
-                          incoming_message["job_application_id"])
+            batch_results = process_batch(batch, BATCH_SIZE, gpt_helper)
+            full_results.extend(batch_results)
+
+        send_results_back(full_results, incoming_message["job_application_id"])
