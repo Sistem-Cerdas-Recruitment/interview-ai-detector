@@ -40,7 +40,7 @@ def process_batch(batch: List[dict[str, any]], batch_size: int, gpt_helper: GetG
 
 def send_results_back(full_results: dict[str, any], job_application_id: str):
     print(f"Sending results back with job_app_id {job_application_id}")
-    url = "https://ta-2-sistem-cerdas-be-vi2jkj4riq-et.a.run.app/api/anti-cheat/update"
+    url = "https://ta-2-sistem-cerdas-be-vi2jkj4riq-et.a.run.app/api/anti-cheat/result"
     headers = {
         "Content-Type": "application/json",
         "x-api-key": os.environ.get("X-API-KEY")
