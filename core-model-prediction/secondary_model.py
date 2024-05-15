@@ -4,13 +4,13 @@ import pandas as pd
 from typing import List
 
 
-class RandomForestModel:
+class SecondaryModel:
     def __init__(self):
         self.scaler = joblib.load("scalers/secondary_scaler.joblib")
-        self.model = joblib.load("models/rf_weights.joblib")
+        self.model = joblib.load("models/secondary_weights.joblib")
         self.secondary_model_features = [
             "machine_probability", "backspace_count_normalized", "typing_duration_normalized",
-            "letter_discrepancy_normalized", "cosine_sim_gpt35", "cosine_sim_gpt4"
+            "letter_discrepancy_normalized", "cosine_sim_gpt35", "cosine_sim_gpt4o"
         ]
 
     def preprocess_input(self, secondary_model_features: List[float]) -> pd.DataFrame:

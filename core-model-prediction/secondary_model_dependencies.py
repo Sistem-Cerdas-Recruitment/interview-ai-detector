@@ -7,8 +7,8 @@ class SecondaryModelDependencies:
         self.text_similarity_model = SentenceTransformer(
             'sentence-transformers/all-mpnet-base-v2')
 
-    def calculate_features(self, question: str, answer: str, probability: float, backspace_count: int, typing_duration: int,
-                           letter_click_counts: dict[str, int], gpt35_answer: str, gpt4_answer: str):
+    def calculate_features(self, answer: str, probability: float, backspace_count: int, typing_duration: int,
+                           letter_click_counts: dict[str, int], gpt35_answer: str, gpt4o_answer: str):
         backspace_count_normalized = backspace_count / len(answer)
         typing_duration_normalized = typing_duration / len(answer)
         letter_discrepancy = self.calculate_letter_discrepancy(
@@ -16,11 +16,12 @@ class SecondaryModelDependencies:
 
         cosine_sim_gpt35 = self.calculate_similarity_gpt35(
             answer, gpt35_answer)
-        cosine_sim_gpt4 = self.calculate_similarity_gpt4(answer, gpt4_answer)
+        cosine_sim_gpt4o = self.calculate_similarity_gpt4o(
+            answer, gpt4o_answer)
 
         return [
             probability, backspace_count_normalized, typing_duration_normalized,
-            letter_discrepancy, cosine_sim_gpt35, cosine_sim_gpt4
+            letter_discrepancy, cosine_sim_gpt35, cosine_sim_gpt4o
         ]
 
     def calculate_letter_discrepancy(self, text: str, letter_click_counts: dict[str, int]):
@@ -46,10 +47,10 @@ class SecondaryModelDependencies:
         cosine_scores = util.cos_sim(embedding1, embedding2)
         return cosine_scores.item()
 
-    def calculate_similarity_gpt4(self, answer: str, gpt4_answer: str) -> float:
+    def calculate_similarity_gpt4o(self, answer: str, gpt4o_answer: str) -> float:
         embedding1 = self.text_similarity_model.encode(
             [answer], convert_to_tensor=True)
         embedding2 = self.text_similarity_model.encode(
-            [gpt4_answer], convert_to_tensor=True)
+            [gpt4o_answer], convert_to_tensor=True)
         cosine_scores = util.cos_sim(embedding1, embedding2)
         return cosine_scores.item()
