@@ -11,7 +11,7 @@ from google.protobuf.json_format import MessageToDict
 
 def get_gpt_responses(data: dict[str, any], gpt_helper: GetGPTAnswer):
     data["gpt35_answer"] = gpt_helper.generate_gpt35_answer(data["question"])
-    data["gpt4_answer"] = gpt_helper.generate_gpt4_answer(data["question"])
+    data["gpt4o_answer"] = gpt_helper.generate_gpt4o_answer(data["question"])
     return data
 
 

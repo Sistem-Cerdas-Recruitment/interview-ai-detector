@@ -5,7 +5,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 class GetGPTAnswer:
     def __init__(self):
         self.llm_gpt35 = ChatOpenAI(model="gpt-3.5-turbo")
-        self.llm_gpt4 = ChatOpenAI(model="gpt-4-turbo")
+        self.llm_gpt4o = ChatOpenAI(model="gpt-4o")
 
     def generate_gpt35_answer(self, question: str):
         messages = [
@@ -17,12 +17,12 @@ class GetGPTAnswer:
         gpt35_answer = self.llm_gpt35.invoke(messages)
         return gpt35_answer.content
 
-    def generate_gpt4_answer(self, question: str):
+    def generate_gpt4o_answer(self, question: str):
         messages = [
             SystemMessage(
                 content="Please answer the following question based solely on your internal knowledge, without external references. Assume you are the human."),
             HumanMessage(question)
         ]
 
-        gpt4_answer = self.llm_gpt4.invoke(messages)
+        gpt4_answer = self.llm_gpt4o.invoke(messages)
         return gpt4_answer.content
