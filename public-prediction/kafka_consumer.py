@@ -48,11 +48,12 @@ def send_results_back(full_results: dict[str, any], job_application_id: str):
 
     body = {
         "job_application_id": job_application_id,
-        "evaluation": full_results
+        "evaluations": full_results
     }
 
     response = requests.patch(url, json=body, headers=headers)
     print(f"Data sent with status code {response.status_code}")
+    print(response.content)
 
 
 def consume_messages():
