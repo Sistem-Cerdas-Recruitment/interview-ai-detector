@@ -20,5 +20,5 @@ class SecondaryModel:
             features_df[self.secondary_model_features])
         return features_df
 
-    def predict(self, secondary_model_features: List[float]):
-        return int(self.model.predict(self.preprocess_input(secondary_model_features))[0])
+    def predict(self, secondary_model_features: List[float]) -> float:
+        return self.model.predict_proba(self.preprocess_input(secondary_model_features))[:, -1][0]
