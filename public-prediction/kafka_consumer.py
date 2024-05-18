@@ -10,7 +10,6 @@ from google.protobuf.json_format import MessageToDict
 
 
 def get_gpt_responses(data: dict[str, any], gpt_helper: GetGPTAnswer):
-    data["gpt35_answer"] = gpt_helper.generate_gpt35_answer(data["question"])
     data["gpt4o_answer"] = gpt_helper.generate_gpt4o_answer(data["question"])
     return data
 
@@ -79,7 +78,8 @@ def consume_messages():
             print("Continuing...")
             continue
 
-        print(f"Parsing successful. Processing job_app_id {incoming_message['job_application_id']}")
+        print("Parsing successful. Processing job_app_id {0}".format(
+            incoming_message['job_application_id']))
 
         full_results = []
         for i in range(0, len(full_batch), BATCH_SIZE):
