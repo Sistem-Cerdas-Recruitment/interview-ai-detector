@@ -58,16 +58,17 @@ def process_instance(data: PredictRequest):
     secondary_model_probability = secondary_model.predict(
         secondary_model_features)
 
+    second_model_threshold = 0.54
+
     return {
-        "predicted_class": "AI" if secondary_model_probability > 0.57 else "HUMAN",
+        "predicted_class": "AI" if secondary_model_probability > second_model_threshold else "HUMAN",
         "main_model_probability": str(main_model_probability),
         "secondary_model_probability": str(secondary_model_probability),
-        "confidence": get_confidence(main_model_probability, secondary_model_probability)
+        "confidence": get_confidence(main_model_probability, secondary_model_probability, second_model_threshold)
     }
 
 
-def get_confidence(main_model_output: float, secondary_model_output: int):
-    threshold = 0.54
+def get_confidence(main_model_output: float, secondary_model_output: int, threshold: float):
     if (main_model_output >= 0.8 and secondary_model_output >= threshold) or (main_model_output <= 0.2 and secondary_model_output <= 1 - threshold):
         return 'High Confidence'
     elif (0.5 < main_model_output < 0.8 and secondary_model_output >= threshold) or (0.2 < main_model_output <= 0.5 and secondary_model_output < threshold):
