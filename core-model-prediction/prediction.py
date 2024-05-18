@@ -56,8 +56,8 @@ def process_instance(data: PredictRequest):
     # Data preparation for 2nd model
     secondary_model_dependencies = SecondaryModelDependencies()
     secondary_model_features = secondary_model_dependencies.calculate_features(
-        answer, main_model_probability, backspace_count, typing_duration,
-        letter_click_counts, gpt35_answer, gpt4o_answer)
+        answer, main_model_probability, backspace_count,
+        letter_click_counts, gpt4o_answer)
 
     # 2nd model prediction
     secondary_model = SecondaryModel()
@@ -67,13 +67,13 @@ def process_instance(data: PredictRequest):
     return {
         "predicted_class": "AI" if secondary_model_probability > 0.57 else "HUMAN",
         "main_model_probability": str(main_model_probability),
-        "secondary_model_probability": secondary_model_probability,
+        "secondary_model_probability": str(secondary_model_probability),
         "confidence": get_confidence(main_model_probability, secondary_model_probability)
     }
 
 
 def get_confidence(main_model_output: float, secondary_model_output: int):
-    threshold = 0.57
+    threshold = 0.54
     if (main_model_output >= 0.8 and secondary_model_output >= threshold) or (main_model_output <= 0.2 and secondary_model_output <= 1 - threshold):
         return 'High Confidence'
     elif (0.5 < main_model_output < 0.8 and secondary_model_output >= threshold) or (0.2 < main_model_output <= 0.5 and secondary_model_output < threshold):
