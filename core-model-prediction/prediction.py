@@ -11,12 +11,9 @@ app = FastAPI()
 
 
 class PredictRequest(BaseModel):
-    question: str
     answer: str
     backspace_count: int
-    typing_duration: int
     letter_click_counts: dict[str, int]
-    gpt35_answer: str
     gpt4o_answer: str
 
 
@@ -36,12 +33,9 @@ async def predict(request: RequestModel):
 
 
 def process_instance(data: PredictRequest):
-    question = data.question
     answer = data.answer
     backspace_count = data.backspace_count
-    typing_duration = data.typing_duration
     letter_click_counts = data.letter_click_counts
-    gpt35_answer = data.gpt35_answer
     gpt4o_answer = data.gpt4o_answer
 
     # Data preparation for 1st model
