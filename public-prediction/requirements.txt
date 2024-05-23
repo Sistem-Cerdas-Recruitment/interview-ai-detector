@@ -1,0 +1,7 @@
+kafka-python
+langchain
+openai
+langchain-openai
+python-dotenv
+google-cloud-aiplatform
+requests
