@@ -2,7 +2,7 @@ from fastapi import FastAPI, Response, status
 from pydantic import BaseModel
 from hypothesis import BaseModelHypothesis
 from secondary_model_dependencies import SecondaryModelDependencies
-from random_forest_model import RandomForestModel
+from secondary_model import SecondaryModel
 from main_model import PredictMainModel
 import numpy as np
 from typing import List
@@ -11,13 +11,10 @@ app = FastAPI()
 
 
 class PredictRequest(BaseModel):
-    question: str
     answer: str
     backspace_count: int
-    typing_duration: int
     letter_click_counts: dict[str, int]
-    gpt35_answer: str
-    gpt4_answer: str
+    gpt4o_answer: str
 
 
 class RequestModel(BaseModel):
@@ -36,13 +33,10 @@ async def predict(request: RequestModel):
 
 
 def process_instance(data: PredictRequest):
-    question = data.question
     answer = data.answer
     backspace_count = data.backspace_count
-    typing_duration = data.typing_duration
     letter_click_counts = data.letter_click_counts
-    gpt35_answer = data.gpt35_answer
-    gpt4_answer = data.gpt4_answer
+    gpt4o_answer = data.gpt4o_answer
 
     # Data preparation for 1st model
     hypothesis = BaseModelHypothesis()
@@ -56,26 +50,28 @@ def process_instance(data: PredictRequest):
     # Data preparation for 2nd model
     secondary_model_dependencies = SecondaryModelDependencies()
     secondary_model_features = secondary_model_dependencies.calculate_features(
-        question, answer, main_model_probability, backspace_count, typing_duration,
-        letter_click_counts, gpt35_answer, gpt4_answer)
+        answer, main_model_probability, backspace_count,
+        letter_click_counts, gpt4o_answer)
 
     # 2nd model prediction
-    secondary_model = RandomForestModel()
-    secondary_model_prediction = secondary_model.predict(
+    secondary_model = SecondaryModel()
+    secondary_model_probability = secondary_model.predict(
         secondary_model_features)
 
+    second_model_threshold = 0.54
+
     return {
-        "predicted_class": "AI" if secondary_model_prediction == 1 else "HUMAN",
+        "predicted_class": "AI" if secondary_model_probability > second_model_threshold else "HUMAN",
         "main_model_probability": str(main_model_probability),
-        "secondary_model_prediction": secondary_model_prediction,
-        "confidence": get_confidence(main_model_probability, secondary_model_prediction)
+        "secondary_model_probability": str(secondary_model_probability),
+        "confidence": get_confidence(main_model_probability, secondary_model_probability, second_model_threshold)
     }
 
 
-def get_confidence(main_model_output: float, secondary_model_output: int):
-    if (main_model_output >= 0.8 and secondary_model_output == 1) or (main_model_output <= 0.2 and secondary_model_output == 0):
+def get_confidence(main_model_output: float, secondary_model_output: int, threshold: float):
+    if (main_model_output >= 0.8 and secondary_model_output >= threshold) or (main_model_output <= 0.2 and secondary_model_output <= 1 - threshold):
         return 'High Confidence'
-    elif (0.5 < main_model_output < 0.8 and secondary_model_output == 1) or (0.2 < main_model_output <= 0.5 and secondary_model_output == 0):
+    elif (0.5 < main_model_output < 0.8 and secondary_model_output >= threshold) or (0.2 < main_model_output <= 0.5 and secondary_model_output < threshold):
         return 'Partially Confident'
     else:
         return 'Low Confidence'
