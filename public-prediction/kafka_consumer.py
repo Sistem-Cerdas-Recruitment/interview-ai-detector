@@ -62,6 +62,7 @@ def consume_messages():
         auto_offset_reset='earliest',
         client_id="ai-detector-1",
         group_id="ai-detector",
+        api_version=(0, 10, 2)
     )
 
     print("Successfully connected to Kafka at", os.environ.get("KAFKA_IP"))
