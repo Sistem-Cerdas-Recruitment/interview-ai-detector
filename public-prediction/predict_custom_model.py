@@ -1,4 +1,5 @@
 from typing import Dict, List, Union
+import os
 from google.cloud import aiplatform
 from google.protobuf import json_format
 from google.protobuf.struct_pb2 import Value
@@ -20,7 +21,7 @@ def predict_custom_trained_model(
     client_options = {"api_endpoint": api_endpoint}
 
     credentials = service_account.Credentials.from_service_account_file(
-        "steady-climate-416810-ea1536e1868c.json")
+        os.getenv("GOOGLE_APPLICATION_CREDENTIALS"))
     # Initialize client that will be used to create and send requests.
     # This client only needs to be created once, and can be reused for multiple requests.
     client = aiplatform.gapic.PredictionServiceClient(
