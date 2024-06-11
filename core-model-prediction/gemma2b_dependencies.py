@@ -24,7 +24,7 @@ class Gemma2BDependencies:
 
     def access_hf_token_secret(self):
         client = secretmanager.SecretManagerServiceClient()
-        name = "projects/steady-climate-416810/secrets/HF_TOKEN/versions/1"
+        name = "projects/ta-2-sistem-cerdas/secrets/HF_TOKEN/versions/1"
         response = client.access_secret_version(request={"name": name})
         return response.payload.data.decode('UTF-8')
 
