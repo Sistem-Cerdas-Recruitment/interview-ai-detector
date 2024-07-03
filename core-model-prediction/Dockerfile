@@ -21,7 +21,7 @@ RUN python -m nltk.downloader punkt wordnet averaged_perceptron_tagger
 RUN unzip /root/nltk_data/corpora/wordnet.zip -d /root/nltk_data/corpora/
 
 # Print masked HF Token for debugging
-RUN echo ${HF_TOKEN:0:4}********${HF_TOKEN: -4}
+RUN echo $HF_TOKEN
 
 # Download HuggingFace model
 RUN python -c "from transformers import AutoTokenizer, AutoModelForCausalLM; \
