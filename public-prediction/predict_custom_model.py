@@ -20,13 +20,9 @@ def predict_custom_trained_model(
     # The AI Platform services require regional API endpoints.
     client_options = {"api_endpoint": api_endpoint}
 
-    credentials = service_account.Credentials.from_service_account_file(
-        os.getenv("GOOGLE_APPLICATION_CREDENTIALS"))
     # Initialize client that will be used to create and send requests.
     # This client only needs to be created once, and can be reused for multiple requests.
-    client = aiplatform.gapic.PredictionServiceClient(
-        credentials=credentials,
-        client_options=client_options)
+    client = aiplatform.gapic.PredictionServiceClient(client_options=client_options)
     # The format of each instance should conform to the deployed model's prediction input schema.
     instances = instances if isinstance(instances, list) else [instances]
     instances = [

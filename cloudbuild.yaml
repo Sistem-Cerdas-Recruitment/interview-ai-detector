@@ -4,10 +4,13 @@ steps:
     args:
       [
         "build",
+        "--build-arg",
+        "HF_TOKEN=${_HF_TOKEN}",
         "-t",
         "us-central1-docker.pkg.dev/${PROJECT_ID}/interview-ai-detector/model-prediction:latest",
         ".",
       ]
+    secretEnv: ["HF_TOKEN"]
 
   - name: "gcr.io/cloud-builders/docker"
     args:
@@ -18,3 +21,8 @@ steps:
 
 images:
   - "us-central1-docker.pkg.dev/${PROJECT_ID}/interview-ai-detector/model-prediction:latest"
+
+availableSecrets:
+  secretManager:
+    - versionName: "projects/${PROJECT_ID}/secrets/HF_TOKEN/versions/1"
+      env: "HF_TOKEN"
