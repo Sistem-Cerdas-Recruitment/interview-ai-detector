@@ -14,8 +14,8 @@ class Gemma2BDependencies:
         if cls._instance is None:
             cls._instance = super(Gemma2BDependencies, cls).__new__(cls)
             model_dir = os.getenv("MODEL_DIR", "/app/gemma-2b")
-            cls._instance.tokenizer = AutoTokenizer.from_pretrained(model_dir)
-            cls._instance.model = AutoModelForCausalLM.from_pretrained(model_dir)
+            cls._instance.tokenizer = AutoTokenizer.from_pretrained(model_dir, local_files_only=True)
+            cls._instance.model = AutoModelForCausalLM.from_pretrained(model_dir, local_files_only=True)
             cls._instance.device = DeviceManager()
             cls._instance.model.to(cls._instance.device)
         return cls._instance

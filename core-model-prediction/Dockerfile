@@ -17,6 +17,9 @@ RUN python -m nltk.downloader punkt wordnet averaged_perceptron_tagger
 # Unzip wordnet
 RUN unzip /root/nltk_data/corpora/wordnet.zip -d /root/nltk_data/corpora/
 
+# Create the directory for saving the model
+RUN mkdir -p /app/gemma-2b && chmod -R 777 /app/gemma-2b
+
 # HF Token args
 ARG HF_TOKEN
 
