@@ -52,7 +52,6 @@ def send_results_back(full_results: dict[str, any], job_application_id: str):
 
     response = requests.patch(url, json=body, headers=headers)
     print(f"Data sent with status code {response.status_code}")
-    print(response.content)
 
 
 def consume_messages():
@@ -62,6 +61,7 @@ def consume_messages():
         auto_offset_reset='earliest',
         client_id="ai-detector-1",
         group_id="ai-detector",
+        api_version=(0, 10, 2)
     )
 
     print("Successfully connected to Kafka at", os.environ.get("KAFKA_IP"))
@@ -71,7 +71,7 @@ def consume_messages():
 
     for message in consumer:
         try:
-            incoming_message = json.loads(message.value.decode("utf-8"))
+            incoming_message = json.loads(json.loads(message.value.decode("utf-8")))
             full_batch = incoming_message["data"]
         except json.JSONDecodeError:
             print("Failed to decode JSON from message:", message.value)
@@ -83,6 +83,7 @@ def consume_messages():
 
         full_results = []
         for i in range(0, len(full_batch), BATCH_SIZE):
+            print(f"Processing batch {i} to {i+BATCH_SIZE}")
             batch = full_batch[i:i+BATCH_SIZE]
             batch_results = process_batch(batch, BATCH_SIZE, gpt_helper)
             full_results.extend(batch_results)
