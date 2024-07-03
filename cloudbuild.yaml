@@ -6,7 +6,7 @@ steps:
     args: 
       - -c
       - | 
-          docker build -t us-central1-docker.pkg.dev/${PROJECT_ID}/interview-ai-detector/model-prediction:latest --build-arg=HF_TOKEN=$$_HF_TOKEN .
+          docker build -t us-central1-docker.pkg.dev/${PROJECT_ID}/interview-ai-detector/model-prediction:latest --build-arg HF_TOKEN=$$_HF_TOKEN .
 
   - name: "gcr.io/cloud-builders/docker"
     args:
@@ -14,6 +14,10 @@ steps:
         "push",
         "us-central1-docker.pkg.dev/${PROJECT_ID}/interview-ai-detector/model-prediction:latest",
       ]
+
+options:
+  pool:
+    name: 'projects/${PROJECT_ID}/locations/us-central1/workerPools/ai-detector-builder'
 
 images:
   - "us-central1-docker.pkg.dev/${PROJECT_ID}/interview-ai-detector/model-prediction:latest"

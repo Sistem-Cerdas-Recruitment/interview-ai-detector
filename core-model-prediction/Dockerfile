@@ -1,6 +1,3 @@
-# HF Token args
-ARG HF_TOKEN
-
 # Use an official Python runtime as a base image
 FROM pytorch/pytorch:2.1.2-cuda12.1-cudnn8-runtime
 
@@ -20,8 +17,8 @@ RUN python -m nltk.downloader punkt wordnet averaged_perceptron_tagger
 # Unzip wordnet
 RUN unzip /root/nltk_data/corpora/wordnet.zip -d /root/nltk_data/corpora/
 
-# Print masked HF Token for debugging
-RUN echo $HF_TOKEN
+# HF Token args
+ARG HF_TOKEN
 
 # Download HuggingFace model
 RUN python -c "from transformers import AutoTokenizer, AutoModelForCausalLM; \
