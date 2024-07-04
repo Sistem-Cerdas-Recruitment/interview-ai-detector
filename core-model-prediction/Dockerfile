@@ -27,11 +27,11 @@ ARG HF_TOKEN
 RUN python -c "from transformers import AutoTokenizer, AutoModelForCausalLM; \
     tokenizer = AutoTokenizer.from_pretrained('google/gemma-2b', token='$HF_TOKEN'); \
     model = AutoModelForCausalLM.from_pretrained('google/gemma-2b', token='$HF_TOKEN'); \
-    tokenizer.save_pretrained('/app/gemma-2b'); \
-    model.save_pretrained('/app/gemma-2b')"
+    tokenizer.save_pretrained('/gemma-2b'); \
+    model.save_pretrained('/gemma-2b')"
 
 # Model env
-ENV MODEL_DIR=/app/gemma-2b
+ENV MODEL_DIR=gemma-2b
 
 # Make port 8080 available to the world outside this container
 EXPOSE 8080
