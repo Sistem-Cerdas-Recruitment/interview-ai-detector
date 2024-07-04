@@ -1,6 +1,3 @@
-# HF Token args
-ARG HF_TOKEN
-
 # Use an official Python runtime as a base image
 FROM pytorch/pytorch:2.1.2-cuda12.1-cudnn8-runtime
 
@@ -20,6 +17,9 @@ RUN python -m nltk.downloader punkt wordnet averaged_perceptron_tagger
 # Unzip wordnet
 RUN unzip /root/nltk_data/corpora/wordnet.zip -d /root/nltk_data/corpora/
 
+# HF Token args
+ARG HF_TOKEN
+
 # Download HuggingFace model
 RUN python -c "from transformers import AutoTokenizer, AutoModelForCausalLM; \
     tokenizer = AutoTokenizer.from_pretrained('google/gemma-2b', token='$HF_TOKEN'); \
@@ -28,7 +28,7 @@ RUN python -c "from transformers import AutoTokenizer, AutoModelForCausalLM; \
     model.save_pretrained('/app/gemma-2b')"
 
 # Model env
-ENV MODEL_DIR=/app/gemma-2b
+ENV MODEL_DIR=gemma-2b
 
 # Make port 8080 available to the world outside this container
 EXPOSE 8080
