@@ -17,22 +17,6 @@ RUN python -m nltk.downloader punkt wordnet averaged_perceptron_tagger
 # Unzip wordnet
 RUN unzip /root/nltk_data/corpora/wordnet.zip -d /root/nltk_data/corpora/
 
-# Create the directory for saving the model
-RUN mkdir -p /app/gemma-2b && chmod -R 777 /app/gemma-2b
-
-# HF Token args
-ARG HF_TOKEN
-
-# Download HuggingFace model
-RUN python -c "from transformers import AutoTokenizer, AutoModelForCausalLM; \
-    tokenizer = AutoTokenizer.from_pretrained('google/gemma-2b', token='$HF_TOKEN'); \
-    model = AutoModelForCausalLM.from_pretrained('google/gemma-2b', token='$HF_TOKEN'); \
-    tokenizer.save_pretrained('/app/gemma-2b', from_pt=True); \
-    model.save_pretrained('/app/gemma-2b', from_pt=True)"
-
-# Model env
-ENV MODEL_DIR=/app/gemma-2b
-
 # Make port 8080 available to the world outside this container
 EXPOSE 8080
 
